@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import "./App.css";
 
@@ -21,6 +21,21 @@ function App() {
 	const [message, setMessage] = useState<string>("");
 	const [items, setItems] = useState<Item[]>([]);
 	const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+	useEffect(() => {
+		const fetchProducts = async () => {
+			const { data: supabaseProducts, error } = await supabase
+				.from("products")
+				.select("*");
+			if (error) {
+				console.error("Error fetching data: ", error);
+			} else {
+				setItems(supabaseProducts);
+			}
+		};
+
+		fetchProducts();
+	}, [message]);
 	// Placeholder functions
 	const importXml = async (
 		fileName: string,
@@ -112,11 +127,6 @@ function App() {
 	// const pushShopify = () => {
 	// 	alert("Push Shopify clicked");
 	// };
-
-	// const loadSupabase = async () => {
-	// 	console.log("Supabase data updated")
-	// 	// function to load all the products from supabase and update the table
-	// }
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		// Handle file upload logic here
