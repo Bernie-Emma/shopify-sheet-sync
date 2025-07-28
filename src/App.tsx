@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import "./App.css";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY =
+	process.env.SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL =
+	process.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 	throw new Error(
 		"Supabase URL or Anon key is not defined in environment variable"
@@ -19,7 +22,6 @@ function App() {
 	const [message, setMessage] = useState<string>("");
 	const [items, setItems] = useState<Item[]>([]);
 	const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 	// Placeholder functions
 	const importXml = async (
 		fileName: string,
