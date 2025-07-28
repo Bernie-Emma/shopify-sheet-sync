@@ -72,16 +72,27 @@ function App() {
 			setMessage(
 				`Download url: ${SUPABASE_URL}/storage/v1/object/public/${fullPath}`
 			);
-			// const { data: downloadData, error } = await supabase.storage
-			// 	.from("products-xml")
-			// 	.download("exports/7-28-2025.txt");
-			// if (error) {
-			// 	console.log(error);
-			// } else {
-			// 	console.log(downloadData);
-			// 	// process into actual file
-			// }
-			// // return a card object that allows client to view or download the necessary xml data
+			const { data: downloadData, error } = await supabase.storage
+				.from("products-xml")
+				.download("exports/7-28-2025.txt");
+			if (error) {
+				console.log(error);
+			} else {
+				const blob = new Blob([downloadData], {
+					type: "application/xml",
+				});
+				const url = URL.createObjectURL(blob);
+
+				const a = document.createElement("a");
+				a.href = url;
+				a.download = "exported-products.txt";
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+
+				URL.revokeObjectURL(url);
+			}
+			// return a card object that allows client to view or download the necessary xml data
 		}
 	};
 	const pullShopify = async () => {
