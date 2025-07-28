@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import "./App.css";
+
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -71,7 +72,16 @@ function App() {
 			setMessage(
 				`Download url: ${SUPABASE_URL}/storage/v1/object/public/${fullPath}`
 			);
-			// return a card object that allows client to view or download the necessary xml data
+			// const { data: downloadData, error } = await supabase.storage
+			// 	.from("products-xml")
+			// 	.download("exports/7-28-2025.txt");
+			// if (error) {
+			// 	console.log(error);
+			// } else {
+			// 	console.log(downloadData);
+			// 	// process into actual file
+			// }
+			// // return a card object that allows client to view or download the necessary xml data
 		}
 	};
 	const pullShopify = async () => {
