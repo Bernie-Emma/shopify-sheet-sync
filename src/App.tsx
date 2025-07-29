@@ -16,23 +16,30 @@ type Item = {
 	title: string;
 	sku: string;
 	inventoryQuantity: number;
+	shopify_id: string;
 };
 
 function App() {
 	const [message, setMessage] = useState<string>(
-		"Input file to start synchronization"
+		"Connection to database established"
 	);
-	const [progress, setProgress] = useState<number>(0);
+	const [progress, setProgress] = useState<number>(100);
 	const [fileName, setFileName] = useState<string>("");
 	const [fileContent, setFileContent] = useState<ArrayBuffer | string>("");
 	const [fileUpload, setFileUpload] = useState<boolean>(false);
 	const [items, setItems] = useState<Item[]>([]);
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 10;
+	const totalPages = Math.ceil(items.length / itemsPerPage);
+	const indexOfLastItem = currentPage * itemsPerPage;
+	const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+	const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
 
 	useEffect(() => {
 		const fetchProducts = async () => {
 			const { data: supabaseProducts, error } = await supabase
 				.from("products")
-				.select("title,sku,inventoryQuantity");
+				.select("title,sku,inventoryQuantity,shopify_id");
 			if (error) {
 				console.error("Error fetching data: ", error);
 			} else {
@@ -43,8 +50,6 @@ function App() {
 		fetchProducts();
 	}, [message]);
 	const uploadFile = async () => {
-		console.log(fileContent);
-		// validate input file is txt
 		if (!fileContent) {
 			return "please input a valid xml file";
 		}
@@ -87,82 +92,86 @@ function App() {
 			setProgress(100);
 			setMessage("Synchronization process completed");
 		}, 20000);
-		// await pullShopify();
-		// await importXml();
-		// await pushShopify();
-		// await exportXml();
-		// clearInterval(intervalId)
-		// setProgress(100)
+		await pullShopify();
+		await importXml();
+		await pushShopify();
+		await exportXml();
+		clearInterval(intervalId);
+		setProgress(100);
 	};
-	// // Placeholder functions
-	// const importXml = async () => {
-	// 	// Make request to edge function
-	// 	const { data, error } = await supabase.functions.invoke(
-	// 		"import-from-xml",
-	// 		{
-	// 			body: { fileName: fileName },
-	// 		}
-	// 	);
-	// 	if (error) {
-	// 		console.log(error);
-	// 		alert("An error occured while importing from the xml file");
-	// 	}
-	// 	// return details about success of the import
-	// 	setMessage(data.message);
-	// };
-	// const exportXml = async () => {
-	// 	const { data, error } = await supabase.functions.invoke(
-	// 		"export-to-xml",
-	// 		{
-	// 			body: { name: "function" },
-	// 		}
-	// 	);
-	// 	if (error) {
-	// 		console.log("Xml data could not be exported");
-	// 	} else {
-	// 		const { fullPath } = JSON.parse(data);
-	// 		setMessage(
-	// 			`Download url: ${SUPABASE_URL}/storage/v1/object/public/${fullPath}`
-	// 		);
-	// 		const { data: downloadData, error } = await supabase.storage
-	// 			.from("products-xml")
-	// 			.download("exports/7-28-2025.txt");
-	// 		if (error) {
-	// 			console.log(error);
-	// 		} else {
-	// 			const blob = new Blob([downloadData], {
-	// 				type: "application/xml",
-	// 			});
-	// 			const url = URL.createObjectURL(blob);
+	// Placeholder functions
+	const importXml = async () => {
+		// Make request to edge function
+		if (!fileName) {
+			console.log("There has to be a file to continue");
+			return;
+		}
+		const { data, error } = await supabase.functions.invoke(
+			"import-from-xml",
+			{
+				body: { fileName: fileName },
+			}
+		);
+		if (error) {
+			console.log(error);
+			alert("An error occured while importing from the xml file");
+		}
+		// return details about success of the import
+		setMessage(data.message);
+	};
+	const exportXml = async () => {
+		const { data, error } = await supabase.functions.invoke(
+			"export-to-xml",
+			{
+				body: { name: "function" },
+			}
+		);
+		if (error) {
+			console.log("Xml data could not be exported");
+		} else {
+			const { fullPath } = JSON.parse(data);
+			setMessage(
+				`Download url: ${SUPABASE_URL}/storage/v1/object/public/${fullPath}`
+			);
+			const { data: downloadData, error } = await supabase.storage
+				.from("products-xml")
+				.download("exports/7-28-2025.txt");
+			if (error) {
+				console.log(error);
+			} else {
+				const blob = new Blob([downloadData], {
+					type: "application/xml",
+				});
+				const url = URL.createObjectURL(blob);
 
-	// 			const a = document.createElement("a");
-	// 			a.href = url;
-	// 			a.download = "exported-products.txt";
-	// 			document.body.appendChild(a);
-	// 			a.click();
-	// 			document.body.removeChild(a);
+				const a = document.createElement("a");
+				a.href = url;
+				a.download = "exported-products.txt";
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
 
-	// 			URL.revokeObjectURL(url);
-	// 		}
-	// 		// return a card object that allows client to view or download the necessary xml data
-	// 	}
-	// };
-	// const pullShopify = async () => {
-	// 	const { data, error } = await supabase.functions.invoke(
-	// 		"pull-from-shopify",
-	// 		{
-	// 			body: { name: "function" },
-	// 		}
-	// 	);
-	// 	if (error) {
-	// 		console.log("An error occured while pulling from shopify");
-	// 	} else {
-	// 		setMessage(data.importResults.message); // display the message
-	// 	}
-	// };
-	// const pushShopify = () => {
-	// 	alert("Push Shopify clicked");
-	// };
+				URL.revokeObjectURL(url);
+			}
+			// return a card object that allows client to view or download the necessary xml data
+		}
+	};
+	const pullShopify = async () => {
+		const { data, error } = await supabase.functions.invoke(
+			"pull-from-shopify",
+			{
+				body: { name: "function" },
+			}
+		);
+		if (error) {
+			console.log("An error occured while pulling from shopify");
+		} else {
+			setMessage(data.importResults.message); // display the message
+		}
+	};
+	const pushShopify = () => {
+		alert("Push Shopify clicked");
+	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		// Handle file upload logic here
@@ -207,12 +216,17 @@ function App() {
 	return (
 		<div className="app-container">
 			<div className="main-card">
-				<h2>Shopify Product Synchronization tool</h2>
+				<h2 className="page-title">
+					Shopify Product Synchronization tool
+				</h2>
 				<div className="message-box">
 					{/* This is going to be an important tool for status updates */}
-					<p className="message">
-						{message + " (products: " + items.length + ")"}
-					</p>
+					{progress < 100 ? (
+						<span className="spinner"></span>
+					) : (
+						<p className="message">{message}</p>
+					)}
+
 					<div
 						className="progress-bar"
 						style={{ width: `${progress}%` }}
@@ -247,7 +261,6 @@ function App() {
 						disabled={fileContent == ""}
 					>
 						<span className="button-content">Upload file</span>
-						<span className="spinner hidden"></span>
 					</button>
 					<button
 						className="action-button blue-button"
@@ -255,15 +268,12 @@ function App() {
 						disabled={fileContent == "" || !fileUpload}
 					>
 						<span className="button-content">Synchronize</span>
-						<span className="spinner hidden"></span>
 					</button>
-					{/* <button
-						id="import-xml-btn"
+					<button
 						className="action-button blue-button"
 						onClick={importXml}
 					>
 						<span className="button-content">Import XML</span>
-						<span className="spinner hidden"></span>
 					</button>
 					<button
 						id="export-xml-btn"
@@ -271,7 +281,6 @@ function App() {
 						onClick={exportXml}
 					>
 						<span className="button-content">Export XML</span>
-						<span className="spinner hidden"></span>
 					</button>
 					<button
 						id="pull-shopify-btn"
@@ -281,7 +290,6 @@ function App() {
 						<span className="button-content">
 							Pull from Shopify
 						</span>
-						<span className="spinner hidden"></span>
 					</button>
 					<button
 						id="push-shopify-btn"
@@ -290,27 +298,55 @@ function App() {
 						disabled
 					>
 						<span className="button-content">Push to Shopify</span>
-						<span className="spinner hidden"></span>
-					</button> */}
+					</button>
 				</div>
 
 				<div className="table-container">
-					{/* Also display some additional data, like number of items or last updated time */}
+					<div className="table-controls">
+						<p>Total Products: {items.length}</p>
+						<button
+							onClick={() =>
+								setCurrentPage((p) => Math.max(p - 1, 1))
+							}
+							disabled={currentPage === 1}
+						>
+							Previous
+						</button>
+						<span>
+							Page {currentPage} of {totalPages}
+						</span>
+						<button
+							onClick={() =>
+								setCurrentPage((p) =>
+									p < totalPages ? p + 1 : p
+								)
+							}
+							disabled={currentPage === totalPages}
+						>
+							Next
+						</button>
+					</div>
 					<table className="item-table">
 						<thead>
 							<tr>
 								<th>Title</th>
 								<th>SKU</th>
 								<th>Quantity</th>
+								<th>Source</th>
 							</tr>
 						</thead>
 						<tbody>
-							{items ? (
-								items.map((item, idx) => (
+							{currentItems.length > 0 ? (
+								currentItems.map((item, idx) => (
 									<tr key={idx}>
 										<td>{item.title}</td>
 										<td>{item.sku}</td>
 										<td>{item.inventoryQuantity}</td>
+										<td>
+											{item.shopify_id
+												? "Shopify"
+												: "XML"}
+										</td>
 									</tr>
 								))
 							) : (

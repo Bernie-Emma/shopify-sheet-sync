@@ -1,8 +1,8 @@
-/* Import a google font */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 /* Basic Reset and Font */
 body {
     margin: 0;
-    font-family: 'Inter', sans-serif; /* You might need to import Inter font from Google Fonts */
+    font-family: 'Barlow', "sans-serif"; /* You might need to import Inter font from Google Fonts */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     box-sizing: border-box;
@@ -20,7 +20,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2.5rem; /* p-4 */
+    padding: 1.5rem 2.5rem; /* p-4 */
     box-sizing: border-box;
 }
 
@@ -39,12 +39,12 @@ body {
 }
 
 .page-title {
-    font-size: 2rem; /* text-4xl */
-    font-weight: 800; /* font-extrabold */
+    font-size: 1.5rem; /* text-4xl */
+    font-weight: 700; /* font-extrabold */
     text-align: center; /* text-center */
     color: #1F2937; /* text-gray-800 */
-    margin-bottom: 0.2rem;
-    margin-top: 0.2rem;
+    margin: 0.2rem;
+    padding: 0; /* p-2 */
 }
 
 /* Message Display */
@@ -53,10 +53,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 60px;
+    height: 50px;
     overflow: hidden;
-    padding: 0.1rem;
-    margin: 0.1rem;
     background-color: #eeeeee;
     border-radius: 0.5rem; /* rounded-lg */
     transition: opacity 0.3s ease-in-out; /* transition-opacity duration-300 */
@@ -73,7 +71,7 @@ body {
 .message {
     position: relative;
     z-index: 2;
-    font-weight: bold;
+    font-weight: 700;
     text-align: center;
     color: #333;
 }
@@ -96,7 +94,7 @@ body {
     position: relative;
     border: 2px dashed #D1D5DB; /* border-2 border-dashed border-gray-300 */
     border-radius: 0.75rem; /* rounded-xl */
-    padding: 2rem; /* p-8 */
+    padding: 1rem; /* p-8 */
     text-align: center;
     transition: all 0.3s ease-in-out; /* transition-all duration-300 */
     cursor: pointer;
@@ -196,7 +194,7 @@ body {
 }
 
 .action-button:disabled {
-    opacity: 0.4;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none; /* Disable scale on hover when disabled */
     box-shadow: none;
@@ -258,18 +256,15 @@ body {
 /* Spinner Styles */
 .spinner {
     display: inline-block;
-    width: 1.25rem; /* h-5 w-5 */
-    height: 1.25rem;
+    width: 2rem; /* h-5 w-5 */
+    height: 2rem;
     vertical-align: middle;
-    border: 0.25rem solid rgba(255, 255, 255, 0.25); /* opacity-25 */
+    border: 0.25rem solid rgba(255, 255, 255, 0.5); /* opacity-25 */
     border-right-color: #fff; /* text-white */
     border-radius: 50%;
     -webkit-animation: spin 1s linear infinite;
     animation: spin 1s linear infinite;
     margin-left: 0.5rem; /* mr-3 */
-}
-.spinner.hidden {
-    display: none;
 }
 
 @-webkit-keyframes spin {
@@ -317,7 +312,7 @@ body {
     text-align: left; /* text-left */
     color: #4B5563; /* text-gray-600 */
     font-size: 0.875rem; /* text-sm */
-    font-weight: 300; /* font-light */
+    font-weight: 400; /* font-light */
     border-bottom: 1px solid #E5E7EB; /* border-b border-gray-200 */
 }
 .item-table td.whitespace-nowrap {
@@ -342,4 +337,12 @@ body {
     text-align: center;
     color: #6B7280; /* text-gray-500 */
     padding: 1rem 1.5rem; /* py-4 px-6 */
+}
+
+.table-controls {
+    display: flex;
+    justify-content: center; /* justify-center */
+    align-items: center; /* items-center */
+    padding: 0.2rem; /* p-4 */
+    gap: 0.5rem; /* space-x-2 */
 }
