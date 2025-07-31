@@ -20,10 +20,8 @@ type Item = {
 };
 
 function App() {
-	const [message, setMessage] = useState<string>(
-		"Connection to database established"
-	);
-	const [messageStatus, setMessageStatus] = useState<string>("info");
+	const [message, setMessage] = useState<string>("Connection to database");
+	const [messageSuccess, setMessageSuccess] = useState<boolean>(false);
 	const [progress, setProgress] = useState<number>(100);
 	const [fileName, setFileName] = useState<string>("");
 	const [fileContent, setFileContent] = useState<ArrayBuffer | string>("");
@@ -43,14 +41,14 @@ function App() {
 				.select("title,sku,inventoryQuantity,shopify_id");
 			if (error) {
 				setMessage("Error fetching products data from database");
-				setMessageStatus("error");
+				setMessageSuccess(false);
 				console.error("Error fetching data: ", error);
 				return;
 			} else {
 				setItems(supabaseProducts);
 				if (progress > 99) {
 					setTimeout(() => {
-						setMessageStatus("");
+						setMessageSuccess(true);
 					}, 5000);
 				}
 			}
@@ -80,7 +78,7 @@ function App() {
 
 		if (uploadError) {
 			setMessage("Error uploading file, please try again!");
-			setMessageStatus("error");
+			setMessageSuccess(false);
 			console.error(uploadError);
 			return;
 		}
@@ -93,29 +91,31 @@ function App() {
 		setProgress(0);
 		const intervalId = setInterval(() => {
 			setProgress((curr) => {
-				const increment = Math.floor(Math.random() * 20) * 0.2;
+				const increment = Math.floor(Math.random() * 20) * 0.05;
 				const next = curr + increment;
 				return next > 95 ? 95 : next;
 			});
 		}, 200);
-		setTimeout(() => {
-			clearInterval(intervalId);
-			setProgress(100);
-			setMessage("Synchronization process completed");
-		}, 20000);
+		// setTimeout(() => {
+		// 	clearInterval(intervalId);
+		// 	setProgress(100);
+		// 	setMessage("Synchronization process completed");
+		// }, 20000);
 		await pullShopify();
 		await importXml();
 		await pushShopify();
 		await exportXml();
 		clearInterval(intervalId);
 		setProgress(100);
+		setMessage(
+			"Synchronization process completed, new xml file downloaded!"
+		);
 	};
 	// Placeholder functions
 	const importXml = async () => {
-		// Make request to edge function
 		if (!fileName) {
 			setMessage("There has to be a file to continue");
-			setMessageStatus("error");
+			setMessageSuccess(false);
 			return;
 		}
 		const { data, error } = await supabase.functions.invoke(
@@ -126,12 +126,13 @@ function App() {
 		);
 		if (error) {
 			setMessage("An error occured while importing from the xml file");
-			setMessageStatus("error");
+			setMessageSuccess(false);
 			console.error(error);
 			return;
 		}
-		// return details about success of the import
-		setMessage(data.message);
+		console.log(data.message);
+		setMessage("Successfully imported products from XML file");
+		setMessageSuccess(true);
 	};
 	const exportXml = async () => {
 		const { data, error } = await supabase.functions.invoke(
@@ -142,19 +143,17 @@ function App() {
 		);
 		if (error) {
 			setMessage("Xml data could not be exported");
-			setMessageStatus("error");
+			setMessageSuccess(false);
 			return;
 		} else {
-			const { fullPath } = JSON.parse(data);
-			setMessage(
-				`Download url: ${SUPABASE_URL}/storage/v1/object/public/${fullPath}`
-			);
+			const { message } = JSON.parse(data);
+			const parts = message.split("/");
 			const { data: downloadData, error } = await supabase.storage
-				.from("products-xml")
-				.download("exports/7-28-2025.txt");
+				.from(parts[0])
+				.download(`${parts[1]}/${parts[2]}`);
 			if (error) {
 				setMessage("Xml data could not be exported");
-				setMessageStatus("error");
+				setMessageSuccess(false);
 				console.error(error);
 				return;
 			} else {
@@ -172,7 +171,6 @@ function App() {
 
 				URL.revokeObjectURL(url);
 			}
-			// return a card object that allows client to view or download the necessary xml data
 		}
 	};
 	const pullShopify = async () => {
@@ -184,12 +182,13 @@ function App() {
 		);
 		if (error) {
 			setMessage("An error occured while pulling products from shopify");
-			setMessageStatus("error");
+			setMessageSuccess(false);
 			console.error(error);
 			return;
 		} else {
-			setMessage(data.importResults.message); // display the message
-			setMessageStatus("success");
+			console.log(data.message);
+			setMessage("Successfully pulled products from Shopify");
+			setMessageSuccess(true);
 		}
 	};
 	const pushShopify = async () => {
@@ -201,11 +200,12 @@ function App() {
 		);
 		if (error) {
 			setMessage("An error occured while pushing from shopify");
-			setMessageStatus("error");
+			setMessageSuccess(false);
 			return;
 		} else {
-			setMessage(data.message); // display the message
-			setMessageStatus("success");
+			console.log(data.message); // display the message
+			setMessage("Successfully pushed products to Shopify");
+			setMessageSuccess(true);
 		}
 	};
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,12 +213,10 @@ function App() {
 		if (e.target.files?.length) {
 			const file = e.target.files[0];
 			const fileExtension = file.name.split(".").pop()?.toLowerCase();
-			setMessage("Processing file upload");
-			setMessageStatus("info");
 
 			if (fileExtension !== "txt") {
 				setMessage(`File "${file.name} is not a .txt file.`);
-				setMessageStatus("error");
+				setMessageSuccess(false);
 				return;
 			}
 
@@ -238,11 +236,11 @@ function App() {
 				setFileContent(fileContent);
 				setFileUpload(false);
 				setMessage(`File: ${file.name} processed successfully`);
-				setMessageStatus("success");
+				setMessageSuccess(true);
 			};
 			reader.onerror = (error) => {
 				setMessage("Error reading file, please try again!");
-				setMessageStatus("error");
+				setMessageSuccess(false);
 				console.error(error);
 				return;
 			};
@@ -256,12 +254,13 @@ function App() {
 				<h2 className="page-title">
 					Shopify Product Synchronization tool
 				</h2>
-				<div className={`message-box ${messageStatus || ""}`}>
-					{progress < 100 ? (
-						<span className="spinner"></span>
-					) : (
-						<p className="message">{message}</p>
-					)}
+				<div
+					className={`message-box ${
+						messageSuccess ? "success" : "error"
+					}`}
+				>
+					<p className="message">{message}</p>
+					{progress < 100 && <span className="spinner"></span>}
 
 					<div
 						className="progress-bar"
@@ -294,18 +293,20 @@ function App() {
 					<button
 						className="action-button green-button"
 						onClick={uploadFile}
-						disabled={fileContent == ""}
+						disabled={fileContent == "" || progress < 100}
 					>
 						<span className="button-content">Upload file</span>
 					</button>
 					<button
 						className="action-button blue-button"
 						onClick={synchronization}
-						disabled={fileContent == "" || !fileUpload}
+						disabled={
+							fileContent == "" || !fileUpload || progress < 100
+						}
 					>
 						<span className="button-content">Synchronize</span>
 					</button>
-					<button
+					{/* <button
 						className="action-button blue-button"
 						onClick={importXml}
 					>
@@ -333,7 +334,7 @@ function App() {
 						onClick={pushShopify}
 					>
 						<span className="button-content">Push to Shopify</span>
-					</button>
+					</button> */}
 				</div>
 
 				<div className="table-container">
