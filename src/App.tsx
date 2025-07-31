@@ -23,6 +23,7 @@ function App() {
 	const [message, setMessage] = useState<string>(
 		"Connection to database established"
 	);
+	const [messageStatus, setMessageStatus] = useState<string>("info");
 	const [progress, setProgress] = useState<number>(100);
 	const [fileName, setFileName] = useState<string>("");
 	const [fileContent, setFileContent] = useState<ArrayBuffer | string>("");
@@ -41,9 +42,17 @@ function App() {
 				.from("products")
 				.select("title,sku,inventoryQuantity,shopify_id");
 			if (error) {
+				setMessage("Error fetching products data from database");
+				setMessageStatus("error");
 				console.error("Error fetching data: ", error);
+				return;
 			} else {
 				setItems(supabaseProducts);
+				if (progress > 99) {
+					setTimeout(() => {
+						setMessageStatus("");
+					}, 5000);
+				}
 			}
 		};
 
@@ -70,7 +79,9 @@ function App() {
 			});
 
 		if (uploadError) {
-			console.log("Error in upload: ", uploadError);
+			setMessage("Error uploading file, please try again!");
+			setMessageStatus("error");
+			console.error(uploadError);
 			return;
 		}
 		setMessage(`File upload successful: ${uploadData.path.split("/")[1]}`);
@@ -103,7 +114,8 @@ function App() {
 	const importXml = async () => {
 		// Make request to edge function
 		if (!fileName) {
-			console.log("There has to be a file to continue");
+			setMessage("There has to be a file to continue");
+			setMessageStatus("error");
 			return;
 		}
 		const { data, error } = await supabase.functions.invoke(
@@ -113,8 +125,10 @@ function App() {
 			}
 		);
 		if (error) {
-			console.log(error);
-			alert("An error occured while importing from the xml file");
+			setMessage("An error occured while importing from the xml file");
+			setMessageStatus("error");
+			console.error(error);
+			return;
 		}
 		// return details about success of the import
 		setMessage(data.message);
@@ -127,7 +141,9 @@ function App() {
 			}
 		);
 		if (error) {
-			console.log("Xml data could not be exported");
+			setMessage("Xml data could not be exported");
+			setMessageStatus("error");
+			return;
 		} else {
 			const { fullPath } = JSON.parse(data);
 			setMessage(
@@ -137,7 +153,10 @@ function App() {
 				.from("products-xml")
 				.download("exports/7-28-2025.txt");
 			if (error) {
-				console.log(error);
+				setMessage("Xml data could not be exported");
+				setMessageStatus("error");
+				console.error(error);
+				return;
 			} else {
 				const blob = new Blob([downloadData], {
 					type: "application/xml",
@@ -164,33 +183,45 @@ function App() {
 			}
 		);
 		if (error) {
-			console.log("An error occured while pulling from shopify");
+			setMessage("An error occured while pulling products from shopify");
+			setMessageStatus("error");
+			console.error(error);
+			return;
 		} else {
 			setMessage(data.importResults.message); // display the message
+			setMessageStatus("success");
 		}
 	};
-	const pushShopify = () => {
-		alert("Push Shopify clicked");
+	const pushShopify = async () => {
+		const { data, error } = await supabase.functions.invoke(
+			"push-to-shopify",
+			{
+				body: { name: "function" },
+			}
+		);
+		if (error) {
+			setMessage("An error occured while pushing from shopify");
+			setMessageStatus("error");
+			return;
+		} else {
+			setMessage(data.message); // display the message
+			setMessageStatus("success");
+		}
 	};
-
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		// Handle file upload logic here
 		if (e.target.files?.length) {
 			const file = e.target.files[0];
 			const fileExtension = file.name.split(".").pop()?.toLowerCase();
-			const confirmation = window.confirm(
-				`Confirm upload of ${file.name}`
-			);
+			setMessage("Processing file upload");
+			setMessageStatus("info");
 
 			if (fileExtension !== "txt") {
-				alert(`File "${file.name} is not a .txt file.`);
+				setMessage(`File "${file.name} is not a .txt file.`);
+				setMessageStatus("error");
 				return;
 			}
 
-			if (!confirmation) {
-				console.log("File upload cancelled by user");
-				return;
-			}
 			const reader = new FileReader();
 			reader.onprogress = (event) => {
 				if (event.lengthComputable) {
@@ -205,9 +236,15 @@ function App() {
 				if (!fileContent) throw new Error("error don sup");
 				setFileName(file.name);
 				setFileContent(fileContent);
+				setFileUpload(false);
+				setMessage(`File: ${file.name} processed successfully`);
+				setMessageStatus("success");
 			};
 			reader.onerror = (error) => {
-				console.error("Error reading file: ", error);
+				setMessage("Error reading file, please try again!");
+				setMessageStatus("error");
+				console.error(error);
+				return;
 			};
 			reader.readAsArrayBuffer(file);
 		}
@@ -219,8 +256,7 @@ function App() {
 				<h2 className="page-title">
 					Shopify Product Synchronization tool
 				</h2>
-				<div className="message-box">
-					{/* This is going to be an important tool for status updates */}
+				<div className={`message-box ${messageStatus || ""}`}>
 					{progress < 100 ? (
 						<span className="spinner"></span>
 					) : (
@@ -294,8 +330,7 @@ function App() {
 					<button
 						id="push-shopify-btn"
 						className="action-button red-button"
-						onClick={pullShopify}
-						disabled
+						onClick={pushShopify}
 					>
 						<span className="button-content">Push to Shopify</span>
 					</button>
