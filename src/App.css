@@ -24,6 +24,12 @@ body {
     box-sizing: border-box;
 }
 
+@media (max-width: 640px) { /* sm breakpoint */
+    .app-container {
+        padding: 0;
+    }
+}
+
 /* Main Card */
 .main-card {
     background-color: #ffffff; /* bg-white */
@@ -153,7 +159,7 @@ body {
 .button-grid {
     display: grid;
     grid-template-columns: 1fr; /* grid-cols-1 */
-    gap: 2rem; /* gap-6 */
+    gap: 1.5rem; /* gap-6 */
 }
 @media (min-width: 640px) { /* sm breakpoint */
     .button-grid {
@@ -162,7 +168,7 @@ body {
 }
 @media (min-width: 1024px) { /* lg breakpoint */
     .button-grid {
-        grid-template-columns: repeat(4, 1fr); /* lg:grid-cols-4 */
+        grid-template-columns: repeat(2, 1fr); /* lg:grid-cols-4 */
     }
 }
 

@@ -337,31 +337,29 @@ function App() {
 					</button> */}
 				</div>
 
+				<div className="table-controls">
+					<p>Total Products: {items.length}</p>
+					<button
+						onClick={() =>
+							setCurrentPage((p) => Math.max(p - 1, 1))
+						}
+						disabled={currentPage === 1}
+					>
+						Previous
+					</button>
+					<span>
+						Page {currentPage} of {totalPages}
+					</span>
+					<button
+						onClick={() =>
+							setCurrentPage((p) => (p < totalPages ? p + 1 : p))
+						}
+						disabled={currentPage === totalPages}
+					>
+						Next
+					</button>
+				</div>
 				<div className="table-container">
-					<div className="table-controls">
-						<p>Total Products: {items.length}</p>
-						<button
-							onClick={() =>
-								setCurrentPage((p) => Math.max(p - 1, 1))
-							}
-							disabled={currentPage === 1}
-						>
-							Previous
-						</button>
-						<span>
-							Page {currentPage} of {totalPages}
-						</span>
-						<button
-							onClick={() =>
-								setCurrentPage((p) =>
-									p < totalPages ? p + 1 : p
-								)
-							}
-							disabled={currentPage === totalPages}
-						>
-							Next
-						</button>
-					</div>
 					<table className="item-table">
 						<thead>
 							<tr>
